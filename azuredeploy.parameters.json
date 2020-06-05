@@ -1,0 +1,28 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "OS": {
+      "value": "RHEL 7.6"
+    },
+    "adminUsername": {
+      "value": "GEN-UNIQUE"
+    },
+    "helix_admin_username": {
+      "value": "GEN-UNIQUE"
+    },
+    "adminSSHPubKey": {
+      "value": "GEN-PASSWORD"
+    },
+    "helix_admin_password": {
+      "value": "GEN-PASSWORD"
+    },
+
+    "source_CIDR": {
+      "value": "0.0.0.0/0"
+    },
+    "VMSize": {
+      "value": "Standard_D4s_v3"
+    }
+  }
+}
