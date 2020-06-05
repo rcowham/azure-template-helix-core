@@ -164,11 +164,16 @@ configure_helix() {
     sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
     sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
     systemctl start p4d_1
-    echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
-    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && p4 trust -y && echo -e \"$PASSWORD\n$"\" | p4 passwd"
+    if [ -z ${PASSWORD+x} ]; then
+        echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
+    else
+        PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
+    fi
+    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && echo -e \"$PASSWORD\n$PASSWORD\" | p4 passwd"
+    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && p4 trust -y"
     sudo -u perforce bash -c "/p4/common/bin/p4login -v 1"
     sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/sdp/Server/setup/configure_new_server.sh 1"
-    sudo -u perforce bash -c "crontab p4.crontab"
+    sudo -u perforce bash -c "crontab /p4/p4.crontab"
 }
 
 check_os
