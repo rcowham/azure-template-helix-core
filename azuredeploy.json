@@ -45,6 +45,12 @@
       },
       "defaultValue": 50
     },
+    "p4Port": {
+      "type": "int",
+      "metadata": {
+        "description": "P4PORT value to connect to server (via ssl)"
+      }
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -109,7 +115,7 @@
     },
     "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
-    "LinuxExecute": "[concat('-u ''', parameters('adminUsername'), ''' -h ''', parameters('helix_admin_username'), ''' -i ''', parameters('helix_admin_password'), ''' -f ''', parameters('OS'), '''')]",
+    "LinuxExecute": "[concat('-u ''', parameters('adminUsername'), ''' -h ''', parameters('helix_admin_username'), ''' -i ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), '''')]",
     "LiCmdWrapper": "[concat('bash ./config-linux.sh ', variables('LinuxExecute'))]",
     "LinuxsecurityRules": [
       {
@@ -137,6 +143,20 @@
           "destinationAddressPrefix": "*",
           "access": "Allow",
           "priority": 102,
+          "direction": "Inbound"
+        }
+      },
+      {
+        "name": "p4d-rule",
+        "properties": {
+          "description": "Allow WEB",
+          "protocol": "Tcp",
+          "sourcePortRange": "*",
+          "destinationPortRange": "[parameters('p4Port')]",
+          "sourceAddressPrefix": "Internet",
+          "destinationAddressPrefix": "*",
+          "access": "Allow",
+          "priority": 103,
           "direction": "Inbound"
         }
       }],

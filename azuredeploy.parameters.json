@@ -25,6 +25,9 @@
     },
     "dataDiskSize": {
         "value": 50
+    },
+    "p4Port": {
+        "value": 1666
     }
   }
 }

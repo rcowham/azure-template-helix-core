@@ -7,9 +7,15 @@ MOUNTPOINT="/hxdata"
 # An set of disks to ignore from partitioning and formatting
 BLACKLIST="/dev/sda|/dev/sdb"
 
-cd /tmp/
-
-echo "script executed" > script.log
+while getopts p:i: option
+do
+ case "${option}"
+ in
+ u) USER=${OPTARG};;
+ i) PASSWORD=${OPTARG};;
+ p) P4PORT=${OPTARG};;
+esac
+done
 
 # if on RHEL, open firewall
 # if [ "$OS" == "RHEL 7.6" ] || [ "$OS" == "CentOS 7.5" ]
@@ -127,9 +133,9 @@ configure_network() {
     if [ $iscentos -eq 0 ];
     then
         disable_selinux_centos
-        firewall-cmd --zone=public --add-port=80/tcp --permanent
-        firewall-cmd --zone=public --add-port=1666/tcp --permanent
-        firewall-cmd --reload
+        # firewall-cmd --zone=public --add-port=80/tcp --permanent
+        # firewall-cmd --zone=public --add-port=1666/tcp --permanent
+        # firewall-cmd --reload
     elif [ $isubuntu -eq 0 ];
     then
         disable_apparmor_ubuntu
@@ -154,12 +160,15 @@ configure_helix() {
     ./reset_sdp.sh -fast -no_sd > reset_sdp.log 2>&1
 
     systemctl enable p4d_1
-    su - perforce
-    perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
-    source /p4/common/bin/p4_vars 1
-    /p4/1/bin/p4d_1 -Gc
-    exit
+    # Change default port and then generate SSL cert
+    sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
+    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
     systemctl start p4d_1
+    echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
+    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && p4 trust -y && echo -e \"$PASSWORD\n$"\" | p4 passwd"
+    sudo -u perforce bash -c "/p4/common/bin/p4login -v 1"
+    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/sdp/Server/setup/configure_new_server.sh 1"
+    sudo -u perforce bash -c "crontab p4.crontab"
 }
 
 check_os
@@ -172,4 +181,3 @@ else
     configure_disks
     configure_helix
 fi
-
