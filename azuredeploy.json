@@ -115,7 +115,7 @@
     },
     "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
-    "LinuxExecute": "[concat('-u ''', parameters('adminUsername'), ''' -h ''', parameters('helix_admin_username'), ''' -i ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), '''')]",
+    "LinuxExecute": "[concat(' -i ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), '''')]",
     "LiCmdWrapper": "[concat('bash ./config-linux.sh ', variables('LinuxExecute'))]",
     "LinuxsecurityRules": [
       {
@@ -353,5 +353,11 @@
         }
       ]
     }
-  ]
+  ],
+  "outputs": {
+    "resourceID": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/publicIPAddresses', 'hxpip1')]"
+    }
+  }
 }

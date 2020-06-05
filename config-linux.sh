@@ -11,7 +11,6 @@ while getopts p:i: option
 do
  case "${option}"
  in
- u) USER=${OPTARG};;
  i) PASSWORD=${OPTARG};;
  p) P4PORT=${OPTARG};;
 esac
@@ -164,7 +163,7 @@ configure_helix() {
     sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
     sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
     systemctl start p4d_1
-    if [ -z ${PASSWORD+x} ]; then
+    if [ ! -z ${PASSWORD} ]; then
         echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
     else
         PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
