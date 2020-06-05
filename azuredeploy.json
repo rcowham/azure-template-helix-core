@@ -38,6 +38,13 @@
       },
       "defaultValue": "Standard_B2s"
     },
+    "dataDiskSize": {
+      "type": "int",
+      "metadata": {
+        "description": "Please select the size of the data disk you wish to deploy (value is integer GB)"
+      },
+      "defaultValue": 50
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -100,6 +107,7 @@
         "version": "latest"
       }
     },
+    "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
     "LinuxExecute": "[concat('-u ''', parameters('adminUsername'), ''' -h ''', parameters('helix_admin_username'), ''' -i ''', parameters('helix_admin_password'), ''' -f ''', parameters('OS'), '''')]",
     "LiCmdWrapper": "[concat('bash ./config-linux.sh ', variables('LinuxExecute'))]",
@@ -249,7 +257,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[concat('helix', copyIndex(1))]",
+      "name": "[concat('helixcore', copyIndex(1))]",
       "apiVersion": "2019-07-01",
       "location": "[parameters('location')]",
       "copy": {
@@ -264,7 +272,7 @@
           "vmSize": "[variables('virtualMachineSize')]"
         },
         "osProfile": {
-          "computerName": "[concat('helixvm', copyIndex(1))]",
+          "computerName": "[concat('helixcorevm', copyIndex(1))]",
           "adminUsername": "[parameters('adminUsername')]",
           "linuxConfiguration": "[variables('linuxConfiguration')]"
         },
@@ -279,7 +287,7 @@
               "name": "dataDisks",
               "count": 1,
               "input": {
-                "diskSizeGB": 64,
+                "diskSizeGB": "[variables('dataDiskSize')]",
                 "lun": "[copyIndex('dataDisks')]",
                 "createOption": "Empty"
               }
@@ -296,12 +304,12 @@
       },
       "resources": [
         {
-          "name": "[concat('helix', copyIndex(1),'/CustomScript')]",
+          "name": "[concat('helixcore', copyIndex(1),'/CustomScript')]",
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "location": "[parameters('location')]",
           "apiVersion": "2019-07-01",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', concat('helix', copyIndex(1)))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', concat('helixcore', copyIndex(1)))]"
           ],
           "tags": {
             "displayName": "linuxappdeploy"
