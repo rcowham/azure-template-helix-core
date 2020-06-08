@@ -393,7 +393,7 @@
   "outputs": {
     "Public IP SSH": {
       "value": "[concat(parameters('adminUsername'), '@',
-        reference(resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpName'))).IpAddress)]",
+        reference(resourceId('Microsoft.Network/publicIPAddresses', 'hxpip1')).ipAddress)]",
       "type": "string"
     }
   }

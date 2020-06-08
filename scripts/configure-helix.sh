@@ -3,6 +3,7 @@
 # This script is only tested on CentOS 7.5, RHEL 7.6 and Ubuntu 18.04 LTS.
 
 MOUNTPOINT="/hxdata"
+LOG=/tmp/init.log
 
 while getopts w:p:s: option
 do
@@ -13,6 +14,10 @@ do
     s) SWARMPORT=${OPTARG};;
   esac
 done
+
+echo "PASSWORD: $PASSWORD" >> $LOG
+echo "P4PORT: $P4PORT" >> $LOG
+echo "SWARMPORT: $SWARMPORT" >> $LOG
 
 check_os() {
     grep ubuntu /proc/version > /dev/null 2>&1
@@ -48,7 +53,7 @@ configure_helix() {
         echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
     fi
 
-    init_script = /p4/init.sh
+    init_script=/p4/init.sh
 cat <<"EOF" >$init_script
 #!/bin/bash
 
@@ -65,7 +70,7 @@ p4 trust -y
 crontab /p4/p4.crontab
 EOF
 
-    bash -xv $init_script > /tmp/init.log 2>&1
+    bash -xv $init_script >> $LOG 2>&1
 }
 
 check_os
