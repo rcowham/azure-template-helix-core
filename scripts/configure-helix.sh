@@ -49,7 +49,7 @@ configure_helix() {
     sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
     sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
     systemctl start p4d_1
-    if [ ! -z ${PASSWORD} ]; then
+    if [ ! -z "${PASSWORD}" ]; then
         echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
     fi
 
@@ -59,18 +59,20 @@ cat <<"EOF" >$init_script
 
 su - perforce
 
-PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
-
 source /p4/common/bin/p4_vars 1
-
-echo -e "$PASSWORD\n$PASSWORD" | p4 passwd
 p4 trust -y
+p4 -p ssl:`hostname`:1666 trust -y
+p4 user -o | p4 user -i
+
+PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
+echo -e "$PASSWORD\n$PASSWORD" | p4 passwd
 /p4/common/bin/p4login -v 1
 /p4/sdp/Server/setup/configure_new_server.sh 1
 crontab /p4/p4.crontab
 EOF
 
-    bash -xv $init_script >> $LOG 2>&1
+    chmod +x $init_script
+    $init_script >> $LOG 2>&1
 }
 
 check_os
