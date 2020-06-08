@@ -7,6 +7,7 @@
       "metadata": {
           "description": "The base URI where artifacts required by this template are located including a trailing '/'"
       },
+      // TODO - update this value: https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/[name of sample folder]/
       "defaultValue": "https://raw.githubusercontent.com/rcowham/azure-template-helix-core/master/"
     },
     "_artifactsLocationSasToken": {
@@ -51,6 +52,12 @@
         "description": "P4PORT value to connect to server (via ssl)"
       }
     },
+    "swarmPort": {
+      "type": "int",
+      "metadata": {
+        "description": "Port for Swarm (Apache) to be setup on."
+      }
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -91,13 +98,13 @@
     "subnet1Name": "Subnet-1",
     "subnet1Prefix": "10.0.0.0/24",
     "numberOfInstances": 1,
-    "linuxscripturi": "[uri(parameters('_artifactsLocation'), concat('config-linux.sh', parameters('_artifactsLocationSasToken')))]",
+    "linuxscripturi": "[uri(parameters('_artifactsLocation'), concat('scripts/configure-linux.sh', parameters('_artifactsLocationSasToken')))]",
     "virtualMachineSize": "[parameters('VMSize')]",
     "imageReference": {
-      "Ubuntu 16.04 LTS": {
+      "Ubuntu 18.04 LTS": {
         "publisher": "Canonical",
         "offer": "UbuntuServer",
-        "sku": "16.04.0-LTS",
+        "sku": "18.04.0-LTS",
         "version": "latest"
       },
       "CentOS 7.5": {
@@ -115,8 +122,9 @@
     },
     "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
-    "LinuxExecute": "[concat(' -i ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), '''')]",
-    "LiCmdWrapper": "[concat('bash ./config-linux.sh ', variables('LinuxExecute'))]",
+    "LinuxScriptParameters": "[concat(' -i ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), '''')]",
+    "LiCmdWrapper1": "bash ./configure-linux.sh",
+    "LiCmdWrapper2": "[concat('bash ./configure-helix.sh ', variables('LinuxScriptParameters'))]",
     "LinuxsecurityRules": [
       {
         "name": "ssh-rule",
@@ -138,7 +146,7 @@
           "description": "Allow WEB",
           "protocol": "Tcp",
           "sourcePortRange": "*",
-          "destinationPortRange": "80",
+          "destinationPortRange": "[parameters('swarmPort')]",
           "sourceAddressPrefix": "Internet",
           "destinationAddressPrefix": "*",
           "access": "Allow",
@@ -344,7 +352,35 @@
               "timestamp": 123456789
             },
             "protectedSettings": {
-              "commandToExecute": "[variables('LiCmdWrapper')]",
+              "commandToExecute": "[variables('LiCmdWrapper1')]",
+              "fileUris": [
+                "[variables('linuxscripturi')]"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[concat('helixcore', copyIndex(1),'/CustomScript2')]",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "location": "[parameters('location')]",
+          "apiVersion": "2019-07-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', concat('helixcore', copyIndex(1)))]"
+          ],
+          "tags": {
+            "displayName": "linuxappdeploy"
+          },
+          "properties": {
+            "publisher": "Microsoft.Azure.Extensions",
+            "type": "CustomScript",
+            "typeHandlerVersion": "2.0",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "skipDos2Unix": false,
+              "timestamp": 123456789
+            },
+            "protectedSettings": {
+              "commandToExecute": "[variables('LiCmdWrapper2')]",
               "fileUris": [
                 "[variables('linuxscripturi')]"
               ]
@@ -355,9 +391,10 @@
     }
   ],
   "outputs": {
-    "resourceID": {
-      "type": "string",
-      "value": "[resourceId('Microsoft.Network/publicIPAddresses', 'hxpip1')]"
+    "Public IP SSH": {
+      "value": "[concat(parameters('adminUsername'), '@',
+        reference(resourceId('Microsoft.Network/publicIPAddresses',variables('publicIpName'))).IpAddress)]",
+      "type": "string"
     }
   }
 }

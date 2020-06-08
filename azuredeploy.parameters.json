@@ -12,7 +12,7 @@
       "value": "GEN-UNIQUE"
     },
     "adminSSHPubKey": {
-      "value": "GEN-PASSWORD"
+      "value": "GEN-SSH-PUB-KEY"
     },
     "helix_admin_password": {
       "value": "GEN-PASSWORD"
@@ -28,6 +28,9 @@
     },
     "p4Port": {
         "value": 1666
+    },
+    "swarmPort": {
+        "value": 80
     }
   }
 }
