@@ -123,7 +123,7 @@
     "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
     "LinuxScriptParameters": "[concat(' -w ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), ''' -s ''', parameters('swarmPort'), '''')]",
-    "LiCmdWrapper": "[concat('bash ./configure-helix.sh ', variables('LinuxScriptParameters'))]",
+    "LiCmdWrapper": "[concat('bash ./configure-linux.sh ', variables('LinuxScriptParameters'))]",
     "LinuxsecurityRules": [
       {
         "name": "ssh-rule",

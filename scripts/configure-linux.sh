@@ -167,7 +167,7 @@ configure_helix() {
 
     systemctl enable p4d_1
     # Change default port and then generate SSL cert
-    sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
+    sudo -u perforce perl -pi -e "s/P4PORTNUM=1999/P4PORTNUM=$P4PORT/" /p4/common/config/p4_1.vars 
     sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
     systemctl start p4d_1
     if [ ! -z "${PASSWORD}" ]; then
@@ -178,11 +178,9 @@ configure_helix() {
 cat <<"EOF" >$init_script
 #!/bin/bash
 
-su - perforce
-
 source /p4/common/bin/p4_vars 1
 p4 trust -y
-p4 -p ssl:`hostname`:1666 trust -y
+p4 -p ssl:`hostname`:$P4PORTNUM trust -y
 p4 user -o | p4 user -i
 
 PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
@@ -193,7 +191,9 @@ crontab /p4/p4.crontab
 EOF
 
     chmod +x $init_script
-    $init_script >> $LOG 2>&1
+    chown perforce:perforce $init_script
+    chmod 666 $LOG
+    sudo -u perforce $init_script >> $LOG 2>&1
 }
 
 check_os
