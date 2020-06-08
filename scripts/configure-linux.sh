@@ -1,20 +1,10 @@
 #!/bin/bash
 
 # This script is only tested on CentOS 7.5, RHEL 7.6 and Ubuntu 18.04 LTS.
-
 MOUNTPOINT="/hxdata"
 
 # An set of disks to ignore from partitioning and formatting
 BLACKLIST="/dev/sda|/dev/sdb"
-
-while getopts p:i: option
-do
- case "${option}"
- in
- i) PASSWORD=${OPTARG};;
- p) P4PORT=${OPTARG};;
-esac
-done
 
 # if on RHEL, open firewall
 # if [ "$OS" == "RHEL 7.6" ] || [ "$OS" == "CentOS 7.5" ]
@@ -141,40 +131,6 @@ configure_network() {
     fi
 }
 
-configure_helix() {
-    useradd --shell /bin/bash --home-dir /p4 --create-home perforce
-    cd "$MOUNTPOINT"
-    mkdir hxlogs hxmetadata hxdepots
-    chown -R perforce:perforce "$MOUNTPOINT"
-    cd /
-    ln -s $MOUNTPOINT/hx* .
-    chown -h perforce:perforce hx*
-
-    mkdir -p /hxdepots/reset
-    cd /hxdepots/reset
-
-    curl -k -s -O https://swarm.workshop.perforce.com/downloads/guest/perforce_software/helix-installer/main/src/reset_sdp.sh
-
-    chmod +x reset_sdp.sh
-    ./reset_sdp.sh -fast -no_sd > reset_sdp.log 2>&1
-
-    systemctl enable p4d_1
-    # Change default port and then generate SSL cert
-    sudo -u perforce perl -pi -e 's/P4PORTNUM=1999/P4PORTNUM=1666/' /p4/common/config/p4_1.vars 
-    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/1/bin/p4d_1 -Gc"
-    systemctl start p4d_1
-    if [ ! -z ${PASSWORD} ]; then
-        echo "$PASSWORD" > /p4/common/config/.p4passwd.p4_1.admin
-    else
-        PASSWORD=`cat /p4/common/config/.p4passwd.p4_1.admin`
-    fi
-    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && echo -e \"$PASSWORD\n$PASSWORD\" | p4 passwd"
-    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && p4 trust -y"
-    sudo -u perforce bash -c "/p4/common/bin/p4login -v 1"
-    sudo -u perforce bash -c "source /p4/common/bin/p4_vars 1 && /p4/sdp/Server/setup/configure_new_server.sh 1"
-    sudo -u perforce bash -c "crontab /p4/p4.crontab"
-}
-
 check_os
 if [ $iscentos -ne 0 ] && [ $isubuntu -ne 0 ];
 then
@@ -183,5 +139,4 @@ then
 else
     configure_network
     configure_disks
-    configure_helix
 fi
