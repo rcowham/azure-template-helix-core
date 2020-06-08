@@ -98,8 +98,7 @@
     "subnet1Name": "Subnet-1",
     "subnet1Prefix": "10.0.0.0/24",
     "numberOfInstances": 1,
-    "linuxscripturi1": "[uri(parameters('_artifactsLocation'), concat('scripts/configure-linux.sh', parameters('_artifactsLocationSasToken')))]",
-    "linuxscripturi2": "[uri(parameters('_artifactsLocation'), concat('scripts/configure-helix.sh', parameters('_artifactsLocationSasToken')))]",
+    "linuxscripturi": "[uri(parameters('_artifactsLocation'), concat('scripts/configure-linux.sh', parameters('_artifactsLocationSasToken')))]",
     "virtualMachineSize": "[parameters('VMSize')]",
     "imageReference": {
       "Ubuntu 18.04 LTS": {
@@ -123,9 +122,8 @@
     },
     "dataDiskSize": "[parameters('dataDiskSize')]",
     "publicIpName": "[substring(concat(uniqueString(resourceGroup().id, deployment().name)), 0, 6)]",
-    "LinuxScriptParameters2": "[concat(' -w ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), ''' -s ''', parameters('swarmPort'), '''')]",
-    "LiCmdWrapper1": "bash ./configure-linux.sh",
-    "LiCmdWrapper2": "[concat('bash ./configure-helix.sh ', variables('LinuxScriptParameters2'))]",
+    "LinuxScriptParameters": "[concat(' -w ''', parameters('helix_admin_password'), ''' -p ''', parameters('p4Port'), ''' -s ''', parameters('swarmPort'), '''')]",
+    "LiCmdWrapper": "[concat('bash ./configure-helix.sh ', variables('LinuxScriptParameters'))]",
     "LinuxsecurityRules": [
       {
         "name": "ssh-rule",
@@ -353,37 +351,9 @@
               "timestamp": 123456789
             },
             "protectedSettings": {
-              "commandToExecute": "[variables('LiCmdWrapper1')]",
+              "commandToExecute": "[variables('LiCmdWrapper')]",
               "fileUris": [
-                "[variables('linuxscripturi1')]"
-              ]
-            }
-          }
-        },
-        {
-          "name": "[concat('helixcore', copyIndex(1),'/CustomScript2')]",
-          "type": "Microsoft.Compute/virtualMachines/extensions",
-          "location": "[parameters('location')]",
-          "apiVersion": "2019-07-01",
-          "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', concat('helixcore', copyIndex(1)))]"
-          ],
-          "tags": {
-            "displayName": "linuxappdeploy"
-          },
-          "properties": {
-            "publisher": "Microsoft.Azure.Extensions",
-            "type": "CustomScript",
-            "typeHandlerVersion": "2.0",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "skipDos2Unix": false,
-              "timestamp": 123456789
-            },
-            "protectedSettings": {
-              "commandToExecute": "[variables('LiCmdWrapper2')]",
-              "fileUris": [
-                "[variables('linuxscripturi2')]"
+                "[variables('linuxscripturi')]"
               ]
             }
           }
