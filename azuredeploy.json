@@ -113,7 +113,7 @@
         "sku": "7.5",
         "version": "latest"
       },
-      "RHEL 7.6": {
+      "RHEL 7.x": {
         "publisher": "RedHat",
         "offer": "RHEL",
         "sku": "7-LVM",
