@@ -18,22 +18,18 @@ do
   esac
 done
 
-echo "PASSWORD: $PASSWORD" >> $LOG
+P4PORT="${P4PORT:-1666}"
+SWARMPORT="${SWARMPORT:-80}"
 echo "P4PORT: $P4PORT" >> $LOG
 echo "SWARMPORT: $SWARMPORT" >> $LOG
-
-# if on RHEL, open firewall
-# if [ "$OS" == "RHEL 7.6" ] || [ "$OS" == "CentOS 7.5" ]
-# then
-#   firewall-cmd --zone=public --add-port=80/tcp --permanent
-#   firewall-cmd --reload
-# fi
 
 check_os() {
     grep ubuntu /proc/version > /dev/null 2>&1
     isubuntu=${?}
     grep centos /proc/version > /dev/null 2>&1
     iscentos=${?}
+    grep redhat /proc/version > /dev/null 2>&1
+    isredhat=${?}
 }
 
 scan_for_new_disks() {
@@ -138,9 +134,12 @@ configure_network() {
     if [ $iscentos -eq 0 ];
     then
         disable_selinux_centos
-        # firewall-cmd --zone=public --add-port=80/tcp --permanent
-        # firewall-cmd --zone=public --add-port=1666/tcp --permanent
-        # firewall-cmd --reload
+    elif [ $isredhat -eq 0 ];
+    then
+        disable_selinux_centos
+        firewall-cmd --zone=public --add-port="$SWARMPORT/tcp" --permanent
+        firewall-cmd --zone=public --add-port="$P4PORT/tcp" --permanent
+        firewall-cmd --reload
     elif [ $isubuntu -eq 0 ];
     then
         disable_apparmor_ubuntu
@@ -197,7 +196,7 @@ EOF
 }
 
 check_os
-if [ $iscentos -ne 0 ] && [ $isubuntu -ne 0 ];
+if [ $iscentos -ne 0 ] && [ $isubuntu -ne 0 ] && [ $isredhat -ne 0 ];
 then
     echo "unsupported operating system"
     exit 1
